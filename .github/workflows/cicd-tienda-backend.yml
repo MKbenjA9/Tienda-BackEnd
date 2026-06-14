@@ -1,4 +1,4 @@
-name: CI/CD Tienda Perritos - Backend
+name: CI Tienda Perritos - Backend
 
 on:
   push:
@@ -7,32 +7,27 @@ on:
       - "backend/**"
 
 jobs:
-  build-push-deploy-backend:
+  build-backend:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout código
-      uses: actions/checkout@v3
+      - name: Checkout código
+        uses: actions/checkout@v3
 
-    - name: Configurar credenciales AWS
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Verificar carpeta Backend
+        run: |
+          ls
+          test -d backend
 
-    - name: Login en Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
+      - name: Verificar Dockerfile
+        run: |
+          test -f backend/Dockerfile
 
-    - name: Build imagen Backend y push a ECR
-      run: |
-        cd backend
-        docker build -t tienda-backend .
-        docker tag tienda-backend:latest ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
-        docker push ${{ secrets.ECR_REPO_URL_BACKEND }}:latest
+      - name: Build imagen Backend
+        run: |
+          cd backend
+          docker build -t tienda-backend .
 
-    - name: Desplegar Backend en ECS Fargate
-      run: |
-        aws ecs update-service --cluster Cluster-TiendaPerritos --service servicio-backend --force-new-deployment
-        # Forzando actualización de pipeline
+      - name: Ver imágenes Docker
+        run: |
+          docker images
